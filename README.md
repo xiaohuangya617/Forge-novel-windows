@@ -6,7 +6,7 @@ AI 小说生成器 9.0 的 Windows EXE 与网页版发布仓库。
 
 ## 下载和使用
 
-发布后的入口如下，当前文档中的用户名是占位符，正式创建仓库后需要替换：
+发布后的入口如下：
 
 - 在线网页版：<https://xiaohuangya617.github.io/Forge-novel-windows/>
 - Windows 版：<https://github.com/xiaohuangya617/Forge-novel-windows/releases/latest>
