@@ -1,0 +1,499 @@
+{
+  "version": "9.0",
+  "scriptFiles": [
+    "runtime/00-state.js",
+    "runtime/01-pricing.js",
+    "runtime/02-session.js",
+    "storage/05-indexeddb-storage.js",
+    "ui/08-dialogs.js",
+    "roleplay/10-roleplay.js",
+    "rules/11-ai-taste.js",
+    "ui/12-toast.js",
+    "ui/13-logs.js",
+    "ui/14-clipboard-combo.js",
+    "ui/15-tab-notifications.js",
+    "storage/16-capacity.js",
+    "storage/17-archive.js",
+    "storage/18-runtime-helpers.js",
+    "api/20-config.js",
+    "api/21-rollback.js",
+    "library/22-book-characters.js",
+    "library/23-global-characters.js",
+    "library/24-global-actions.js",
+    "library/25-global-costumes.js",
+    "library/26-forbidden-words.js",
+    "stats/30-compute.js",
+    "stats/31-modal.js",
+    "stats/32-tabs.js",
+    "stats/33-open.js",
+    "stats/34-close.js",
+    "stats/35-export.js",
+    "stats/36-forbidden-entry.js",
+    "graph/40-core.js",
+    "graph/41-regions.js",
+    "graph/42-editor.js",
+    "generation/43-context-builders.js",
+    "generation/44-check-and-budget.js",
+    "generation/45-summary-growth.js",
+    "generation/46-core.js",
+    "generation/47-stop-and-chat.js",
+    "generation/48-chat-render.js",
+    "generation/49-multi-chapter.js",
+    "generation/4a-dual.js",
+    "generation/4b-branch-context.js",
+    "generation/4c-branch-continue.js",
+    "editor/50-polish.js",
+    "editor/51-rewrite.js",
+    "editor/52-bookshelf.js",
+    "editor/53-start-book.js",
+    "editor/54-save.js",
+    "editor/55-chapters.js",
+    "editor/56-format-and-export.js",
+    "backup/57-settings-and-export.js",
+    "backup/58-validation.js",
+    "backup/59-transaction.js",
+    "backup/5a-full-import.js",
+    "backup/5b-android-restore.js",
+    "editor/5c-conflict-panel.js",
+    "editor/5d-check-marks.js",
+    "banter/60-banter.js",
+    "editor/61-find-replace.js",
+    "editor/62-autosave-resize.js",
+    "bindings/63-events.js",
+    "precision/70-panel.js",
+    "precision/71-filter.js",
+    "precision/72-search.js",
+    "precision/73-library-filter.js",
+    "tags/80-core.js",
+    "tags/81-batch.js",
+    "layout/82-library-editor.js",
+    "layout/83-textarea.js",
+    "app/90-scratchpad.js",
+    "app/91-menu.js",
+    "app/92-init.js"
+  ],
+  "sourceMap": [
+    {
+      "file": "storage/05-indexeddb-storage.js",
+      "source": "adapter/05-indexeddb-storage.js",
+      "startLine": 1,
+      "endLine": 427
+    },
+    {
+      "file": "ui/08-dialogs.js",
+      "source": "adapter/08-dialogs.js",
+      "startLine": 1,
+      "endLine": 95
+    },
+    {
+      "file": "runtime/00-state.js",
+      "source": "js/00-runtime-and-pricing.js",
+      "startLine": 1,
+      "endLine": 56
+    },
+    {
+      "file": "runtime/01-pricing.js",
+      "source": "js/00-runtime-and-pricing.js",
+      "startLine": 57,
+      "endLine": 103
+    },
+    {
+      "file": "runtime/02-session.js",
+      "source": "js/00-runtime-and-pricing.js",
+      "startLine": 104,
+      "endLine": 149
+    },
+    {
+      "file": "roleplay/10-roleplay.js",
+      "source": "js/10-roleplay-rules-storage.js",
+      "startLine": 1,
+      "endLine": 260
+    },
+    {
+      "file": "rules/11-ai-taste.js",
+      "source": "js/10-roleplay-rules-storage.js",
+      "startLine": 261,
+      "endLine": 350
+    },
+    {
+      "file": "ui/12-toast.js",
+      "source": "js/10-roleplay-rules-storage.js",
+      "startLine": 351,
+      "endLine": 354
+    },
+    {
+      "file": "ui/13-logs.js",
+      "source": "js/10-roleplay-rules-storage.js",
+      "startLine": 355,
+      "endLine": 364
+    },
+    {
+      "file": "ui/14-clipboard-combo.js",
+      "source": "js/10-roleplay-rules-storage.js",
+      "startLine": 365,
+      "endLine": 460
+    },
+    {
+      "file": "ui/15-tab-notifications.js",
+      "source": "js/10-roleplay-rules-storage.js",
+      "startLine": 461,
+      "endLine": 499
+    },
+    {
+      "file": "storage/16-capacity.js",
+      "source": "js/10-roleplay-rules-storage.js",
+      "startLine": 500,
+      "endLine": 541
+    },
+    {
+      "file": "storage/17-archive.js",
+      "source": "js/10-roleplay-rules-storage.js",
+      "startLine": 542,
+      "endLine": 740
+    },
+    {
+      "file": "storage/18-runtime-helpers.js",
+      "source": "js/10-roleplay-rules-storage.js",
+      "startLine": 741,
+      "endLine": 797
+    },
+    {
+      "file": "api/20-config.js",
+      "source": "js/20-api-and-libraries.js",
+      "startLine": 1,
+      "endLine": 438
+    },
+    {
+      "file": "api/21-rollback.js",
+      "source": "js/20-api-and-libraries.js",
+      "startLine": 439,
+      "endLine": 497
+    },
+    {
+      "file": "library/22-book-characters.js",
+      "source": "js/20-api-and-libraries.js",
+      "startLine": 498,
+      "endLine": 600
+    },
+    {
+      "file": "library/23-global-characters.js",
+      "source": "js/20-api-and-libraries.js",
+      "startLine": 601,
+      "endLine": 657
+    },
+    {
+      "file": "library/24-global-actions.js",
+      "source": "js/20-api-and-libraries.js",
+      "startLine": 658,
+      "endLine": 710
+    },
+    {
+      "file": "library/25-global-costumes.js",
+      "source": "js/20-api-and-libraries.js",
+      "startLine": 711,
+      "endLine": 778
+    },
+    {
+      "file": "library/26-forbidden-words.js",
+      "source": "js/20-api-and-libraries.js",
+      "startLine": 779,
+      "endLine": 796
+    },
+    {
+      "file": "stats/30-compute.js",
+      "source": "js/30-stats-relations.js",
+      "startLine": 1,
+      "endLine": 81
+    },
+    {
+      "file": "stats/31-modal.js",
+      "source": "js/30-stats-relations.js",
+      "startLine": 82,
+      "endLine": 128
+    },
+    {
+      "file": "stats/32-tabs.js",
+      "source": "js/30-stats-relations.js",
+      "startLine": 129,
+      "endLine": 135
+    },
+    {
+      "file": "stats/33-open.js",
+      "source": "js/30-stats-relations.js",
+      "startLine": 136,
+      "endLine": 142
+    },
+    {
+      "file": "stats/34-close.js",
+      "source": "js/30-stats-relations.js",
+      "startLine": 143,
+      "endLine": 143
+    },
+    {
+      "file": "stats/35-export.js",
+      "source": "js/30-stats-relations.js",
+      "startLine": 144,
+      "endLine": 168
+    },
+    {
+      "file": "stats/36-forbidden-entry.js",
+      "source": "js/30-stats-relations.js",
+      "startLine": 169,
+      "endLine": 171
+    },
+    {
+      "file": "graph/40-core.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 1,
+      "endLine": 70
+    },
+    {
+      "file": "graph/41-regions.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 71,
+      "endLine": 460
+    },
+    {
+      "file": "graph/42-editor.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 461,
+      "endLine": 527
+    },
+    {
+      "file": "generation/43-context-builders.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 528,
+      "endLine": 747
+    },
+    {
+      "file": "generation/44-check-and-budget.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 748,
+      "endLine": 868
+    },
+    {
+      "file": "generation/45-summary-growth.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 869,
+      "endLine": 1136
+    },
+    {
+      "file": "generation/46-core.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 1137,
+      "endLine": 1322
+    },
+    {
+      "file": "generation/47-stop-and-chat.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 1323,
+      "endLine": 1382
+    },
+    {
+      "file": "generation/48-chat-render.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 1383,
+      "endLine": 1511
+    },
+    {
+      "file": "generation/49-multi-chapter.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 1512,
+      "endLine": 1601
+    },
+    {
+      "file": "generation/4a-dual.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 1602,
+      "endLine": 1816
+    },
+    {
+      "file": "generation/4b-branch-context.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 1817,
+      "endLine": 1942
+    },
+    {
+      "file": "generation/4c-branch-continue.js",
+      "source": "js/40-generation-and-polish.js",
+      "startLine": 1943,
+      "endLine": 2032
+    },
+    {
+      "file": "editor/50-polish.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 1,
+      "endLine": 348
+    },
+    {
+      "file": "editor/51-rewrite.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 349,
+      "endLine": 444
+    },
+    {
+      "file": "editor/52-bookshelf.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 445,
+      "endLine": 595
+    },
+    {
+      "file": "editor/53-start-book.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 596,
+      "endLine": 854
+    },
+    {
+      "file": "editor/54-save.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 855,
+      "endLine": 916
+    },
+    {
+      "file": "editor/55-chapters.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 917,
+      "endLine": 1034
+    },
+    {
+      "file": "editor/56-format-and-export.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 1035,
+      "endLine": 1078
+    },
+    {
+      "file": "backup/57-settings-and-export.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 1079,
+      "endLine": 1122
+    },
+    {
+      "file": "backup/58-validation.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 1123,
+      "endLine": 1148
+    },
+    {
+      "file": "backup/59-transaction.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 1149,
+      "endLine": 1163
+    },
+    {
+      "file": "backup/5a-full-import.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 1164,
+      "endLine": 1258
+    },
+    {
+      "file": "backup/5b-android-restore.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 1259,
+      "endLine": 1347
+    },
+    {
+      "file": "editor/5c-conflict-panel.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 1348,
+      "endLine": 1418
+    },
+    {
+      "file": "editor/5d-check-marks.js",
+      "source": "js/50-editor-and-backup.js",
+      "startLine": 1419,
+      "endLine": 1484
+    },
+    {
+      "file": "banter/60-banter.js",
+      "source": "js/60-banter-and-start-book.js",
+      "startLine": 1,
+      "endLine": 266
+    },
+    {
+      "file": "editor/61-find-replace.js",
+      "source": "js/60-banter-and-start-book.js",
+      "startLine": 267,
+      "endLine": 325
+    },
+    {
+      "file": "editor/62-autosave-resize.js",
+      "source": "js/60-banter-and-start-book.js",
+      "startLine": 326,
+      "endLine": 343
+    },
+    {
+      "file": "bindings/63-events.js",
+      "source": "js/60-banter-and-start-book.js",
+      "startLine": 344,
+      "endLine": 869
+    },
+    {
+      "file": "precision/70-panel.js",
+      "source": "js/70-bindings-and-precision.js",
+      "startLine": 1,
+      "endLine": 56
+    },
+    {
+      "file": "precision/71-filter.js",
+      "source": "js/70-bindings-and-precision.js",
+      "startLine": 57,
+      "endLine": 82
+    },
+    {
+      "file": "precision/72-search.js",
+      "source": "js/70-bindings-and-precision.js",
+      "startLine": 83,
+      "endLine": 95
+    },
+    {
+      "file": "precision/73-library-filter.js",
+      "source": "js/70-bindings-and-precision.js",
+      "startLine": 96,
+      "endLine": 122
+    },
+    {
+      "file": "tags/80-core.js",
+      "source": "js/80-tags-layout-scratchpad.js",
+      "startLine": 1,
+      "endLine": 73
+    },
+    {
+      "file": "tags/81-batch.js",
+      "source": "js/80-tags-layout-scratchpad.js",
+      "startLine": 74,
+      "endLine": 279
+    },
+    {
+      "file": "layout/82-library-editor.js",
+      "source": "js/80-tags-layout-scratchpad.js",
+      "startLine": 280,
+      "endLine": 358
+    },
+    {
+      "file": "layout/83-textarea.js",
+      "source": "js/80-tags-layout-scratchpad.js",
+      "startLine": 359,
+      "endLine": 395
+    },
+    {
+      "file": "app/90-scratchpad.js",
+      "source": "js/90-init.js",
+      "startLine": 1,
+      "endLine": 157
+    },
+    {
+      "file": "app/91-menu.js",
+      "source": "js/90-init.js",
+      "startLine": 158,
+      "endLine": 186
+    },
+    {
+      "file": "app/92-init.js",
+      "source": "js/90-init.js",
+      "startLine": 187,
+      "endLine": 264
+    }
+  ],
+  "htmlPatches": [],
+  "product": "exe-idb"
+}

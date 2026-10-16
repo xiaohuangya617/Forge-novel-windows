@@ -1,0 +1,7 @@
+{
+  "name": "ai-novel-generator",
+  "version": "9.0.0",
+  "description": "AI小说生成器",
+  "main": "main.js",
+  "private": true
+}

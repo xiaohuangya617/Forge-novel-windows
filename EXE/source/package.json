@@ -1,0 +1,21 @@
+{
+  "name": "ai-novel-generator-9.0-exe-idb",
+  "version": "9.0.0-idb.1",
+  "private": true,
+  "description": "AI小说生成器 9.0 的独立 Electron + IndexedDB 开发项目",
+  "scripts": {
+    "build:renderer": "node build-exe-renderer.mjs",
+    "validate:build": "node tests/validate-build.mjs",
+    "build:runtime": "node build-exe-runtime.mjs",
+    "test:headless": "node tests/headless-smoke.cjs",
+    "test:snapshot": "node tests/snapshot-restore-smoke.cjs",
+    "test:electron": "node tests/electron-ipc-smoke.cjs",
+    "test:electron-android-restore": "node tests/electron-android-restore-smoke.cjs",
+    "test:large-idb": "node tests/large-idb-smoke.cjs",
+    "test:feature-compare": "node tests/feature-compare.mjs",
+    "test:generation-interruptions": "node tests/generation-summary-stop-resend-smoke.cjs && node tests/generation-multi-stop-resend-smoke.cjs",
+    "test:electron-ui": "node tests/electron-ui-smoke.cjs",
+    "test:android-restore": "node tests/android-restore-smoke.mjs",
+    "test:html": "node tests/html-smoke.cjs"
+  }
+}

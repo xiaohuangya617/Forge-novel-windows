@@ -1,0 +1,40 @@
+# Dependencies and local build output
+node_modules/
+**/node_modules/
+EXE/source/tests/_tmp/
+EXE/source/tests/_electron-ui-data*/
+EXE/source/dist/
+EXE/source/electron/resources/app/index.html
+
+# Internal project memory, audit notes and release operations notes
+EXE/source/docs/01-project-memory.md
+EXE/source/docs/02-lessons-and-pitfalls.md
+EXE/source/docs/03-code-audit-*.md
+GitHub发布技能与经验教训.md
+
+# Electron runtime product is uploaded as a Release asset, not committed by default
+EXE/product/
+
+# Runtime logs and temporary files
+**/err.log
+**/stdout.txt
+**/stderr.txt
+**/ps_run*.txt
+**/*.tmp
+**/*.bak
+
+# Local data and credentials
+**/userData/
+**/local.properties
+.env
+*.env
+*.pem
+*.key
+*.p12
+*.jks
+
+# Editor and OS files
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini

@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>AI小说生成器 | v9.0</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📖%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-5e2ESR8Ycmos6g3gAKr1Jvwye8sW4U1u/cAKulfVJnkakCcMqhOudbtPnvJ+nbv7" crossorigin="anonymous">
+    <style>
+        /* @STYLE */
+</style>
+</head>
+<body>
+<div class="app">
+    <div class="top-bar">
+        <div class="logo">
+            <h2 style="user-select:none;cursor:default;" title="双击隐藏正文（防窥屏），再双击或按 Esc 恢复"><i class="fas fa-pen-fancy"></i> AI小说生成器</h2>
+            <span class="version-badge">v9.0</span>
+            <div class="current-book-badge"><i class="fas fa-book"></i> <span id="curBookName">未选择</span></div>
+            <span id="storageIndicator" class="storage-indicator">💾 0MB / 5MB</span>
+        </div>
+        <div class="top-actions-wrap" id="topActionsWrap">
+        <div class="top-actions" id="topActions">
+            <button id="actionLibraryBtn" class="glass-btn"><i class="fas fa-fist-raised"></i> 全局动作库</button>
+            <button id="costumeLibraryBtn" class="glass-btn"><i class="fas fa-tshirt"></i> 全局服装库</button>
+            <button id="globalRoleBtn" class="glass-btn"><i class="fas fa-box"></i> 素材角色库</button>
+            <button id="scratchpadBtn" class="glass-btn white-outline"><i class="fas fa-sticky-note"></i> 草稿本</button><span class="menu-divider" aria-hidden="true">|</span>
+            <button id="roleLibraryBtn" class="glass-btn"><i class="fas fa-users"></i> 本书角色库</button>
+            <button id="roleplayBtn" class="glass-btn white-outline"><i class="fas fa-masks-theater"></i> 角色试演</button>
+            <button id="relationGraphBtn" class="glass-btn"><i class="fas fa-project-diagram"></i> 本书关系图</button>
+            <button id="forbiddenWordsBtn" class="glass-btn"><i class="fas fa-ban"></i> 本书禁用词</button><span class="menu-divider" aria-hidden="true">|</span>
+            <button id="statsBtn" class="glass-btn"><i class="fas fa-chart-line"></i> 统计</button>
+            <button id="backupExportBtn" class="glass-btn white-outline"><i class="fas fa-archive"></i> 备份</button>
+            <button id="backupImportBtn" class="glass-btn white-outline"><i class="fas fa-upload"></i> 恢复</button>
+            <button id="androidRestoreBtn" class="glass-btn" title="只从 Android 存档追加书籍正文和本书角色库"><i class="fas fa-mobile-screen-button"></i> 安卓恢复</button>
+            <button id="exportBtn" class="glass-btn"><i class="fas fa-download"></i> 导出正文</button><span class="menu-divider" aria-hidden="true">|</span>
+            <button id="notifyBtn" class="glass-btn"><i class="fas fa-bell"></i> 页签提醒</button>
+            <button id="guideBtn" class="glass-btn"><i class="fas fa-question-circle"></i> 使用指南</button>
+            <button id="resetAllBtn" class="glass-btn" style="background:#3A2A2A;"><i class="fas fa-redo-alt"></i> 初始化</button>
+        </div>
+        </div>
+    </div>
+    <div class="main-row">
+        <div class="left-stack" id="leftStack">
+            <div class="resize-left" id="resizeLeft"></div>
+            <div class="shelf-box"><div class="shelf-header"><span>📚 书架</span><i class="fas fa-plus" id="newBookIcon" style="cursor:pointer"></i></div><div class="book-list" id="bookList"></div><div class="start-book-btn glow" id="newBookBtn"><i class="fas fa-bolt"></i> 一键起书（新手向）</div></div>
+            <div class="chapters-box"><div class="chapters-header"><span><i class="fas fa-list"></i> 章节列表</span><i class="fas fa-plus" id="addChapIcon" style="cursor:pointer;margin-left:8px;"></i></div><div class="chapters-list" id="chaptersList" draggable="false"></div></div>
+        </div>
+        <div class="chat-container" id="chatContainer">
+            <div class="resize-chat" id="resizeChat"></div>
+            <div class="chat-header"><span><i class="fas fa-comment"></i> 创作指令</span><button id="clearChatBtn" class="glass-btn" style="padding:2px 8px;"><i class="fas fa-trash-alt"></i> 清空记录</button></div>
+            <div class="chat-msgs" id="chatMsgs"></div>
+            <div class="chat-input">
+                <div class="chat-input-wrapper">
+                    <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0;">
+                    <textarea id="chatInp" rows="3" placeholder="例如：第二章，雨夜男主送女主回家，气氛暧昧... (Ctrl+Enter 发送)"></textarea>
+                    <!-- v8.4-②：上下文预算占用进度条（实时估算，<80% 绿 / 80-100% 黄 / >100% 红；与输入框同宽 + 胶囊边框） -->
+                    <div id="ctxBudgetBar" style="display:flex;align-items:center;gap:8px;padding:4px 10px;border:1px solid #3A3452;border-radius:20px;background:#13121C;">
+                        <span style="font-size:0.65rem;color:#8A84A8;white-space:nowrap;">上下文预算</span>
+                        <div style="flex:1;height:5px;background:#241F38;border-radius:3px;overflow:hidden;">
+                            <div id="ctxBudgetFill" style="width:0%;height:100%;background:#3BAF5A;border-radius:3px;transition:width .2s,background .2s;"></div>
+                        </div>
+                        <span id="ctxBudgetPct" style="font-size:0.65rem;color:#8A84A8;white-space:nowrap;min-width:34px;text-align:right;">0%</span>
+                        <span id="ctxBudgetDetail" style="font-size:0.6rem;color:#6A627A;white-space:nowrap;">估算</span>
+                    </div>
+                    </div>
+                    <div class="button-stack">
+                        <button id="sendMsgBtn" class="icon-btn send-btn" title="发送指令"><i class="fas fa-paper-plane"></i></button>
+                        <button id="stopGenBtn" class="icon-btn stop-btn" disabled title="停止生成"><i class="fas fa-stop"></i></button>
+                        <button id="apiBtnSidebar" class="icon-btn api-btn" title="API 调参"><i class="fas fa-sliders-h"></i></button>
+                        <button id="precisionBtn" class="icon-btn precision-btn" title="精准模式（单次生效）"><i class="fas fa-crosshairs"></i></button>
+                        <div style="position:relative;">
+                        <button id="dualModeBtn" class="icon-btn dual-mode-btn" title="生成模式（单次生效）"><i class="fas fa-layer-group"></i></button>
+                        
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="editor">
+            <div class="editor-header">
+                <span><i class="fas fa-edit" id="chapRenameIcon" title="点击修改章节标题" style="cursor:pointer;"></i> <span id="curChapName">未选择</span></span>
+                <div class="font-size-row">
+                    <button id="fontSizeDown" class="glass-btn" title="缩小字号">A-</button>
+                    <span class="font-size-val" id="fontSizeVal">16px</span>
+                    <button id="fontSizeUp" class="glass-btn" title="放大字号">A+</button>
+                </div>
+                <div>
+                    <button id="prevChap" class="nav-btn"><i class="fas fa-chevron-left"></i></button>
+                    <button id="nextChap" class="nav-btn"><i class="fas fa-chevron-right"></i></button>
+                    <button id="findBtn" class="nav-btn" style="background:#2A3A5A;" title="查找替换 Ctrl+F"><i class="fas fa-search"></i></button>
+                    <!-- v8.4.1-⑥-a：按钮顺序重排（保存→重写→回滚→续写→检查→润色→吐槽），润色/吐槽去小图标 -->
+                    <button id="saveChapBtn" class="nav-btn" style="background:#2A5A5A;"><i class="fas fa-save"></i> 保存</button>
+                    <button id="regenerateBtn" class="nav-btn" style="background:#4a3a2a;">重写</button>
+                    <button id="rollbackBtn" class="nav-btn" style="background:#2A5A3A;" disabled>回滚</button>
+                    <button id="continueBtn" class="nav-btn" style="background:#6a4e2e;">续写</button>
+                    <button id="checkConflictBtn" class="nav-btn" style="background:#3A3A6A;">检测</button>
+                    <button id="polishBtn" class="nav-btn" style="background:#4A2A6A;" title="✨ 润色：AI 审查并润色本章">润色</button>
+                    <button id="banterBtn" class="nav-btn" style="background:#3A3A5A;" title="💬 吐槽：模拟读者/编辑/粉丝等角色点评本章（v7.8）">吐槽</button>
+                </div>
+            </div>
+            <div id="polishActionBar"><span class="polish-count" id="polishActionCount">共 N 处修改</span><button id="polishApplyBtn"><i class="fas fa-check"></i> 应用修改</button><button id="polishDiscardBtn">↩️ 放弃</button></div>
+            <div class="find-bar" id="findBar">
+                <input type="text" id="findInput" placeholder="查找...">
+                <span class="find-nav" id="findCount"></span>
+                <button class="small-btn" id="findPrevBtn">◀</button>
+                <button class="small-btn" id="findNextBtn">▶</button>
+                <input type="text" id="replaceInput" placeholder="替换为...">
+                <button class="small-btn" id="replaceOneBtn">替换</button>
+                <button class="small-btn" id="replaceAllBtn">全部替换</button>
+                <button class="small-btn" id="closeFindBtn" style="background:#4A2A2A;">✕</button>
+            </div>
+            <div class="editable-area"><div id="writingLockTip" style="display:none;background:#2A2A3A;color:#8A84FF;border:1px solid #4A4A8A;border-radius:8px;padding:6px 10px;margin-bottom:6px;font-size:0.65rem;"><i class="fas fa-lock"></i> ✍️ AI 正在生成中，当前章节已锁定，避免生成结果覆盖你输入的内容</div><div id="novelContent" contenteditable="true" style="white-space:pre-wrap;">✨ 左侧按钮，一键起书，创作你的第一本小说吧！</div><div class="summary-area" id="summaryAreaWrap"><div class="summary-header"><span>📝 本章摘要</span><button id="genSummaryBtn" class="small-btn" style="font-size:0.6rem;">🔄 重新生成摘要和经历</button></div><textarea id="summaryArea" rows="3" maxlength="300" placeholder="本章摘要（150字左右，含时间/地点/事件/关键细节）。AI 生成后自动填充，也可手动填写；用于上下文注入"></textarea></div></div>
+        </div>
+        <div class="right-side" id="rightSide">
+            <div class="resize-right" id="resizeRight"></div>
+            <div class="settings-box">
+                <div class="tabs"><button class="tab" data-tab="world">📖 世界书</button><button class="tab" data-tab="global">🌍 全局提示</button><button class="tab active" data-tab="log">📜 日志</button></div>
+                <div class="tab-pane" id="pane-world"><div class="section-label">🌍 世界观名词</div><textarea id="worldview" rows="10"></textarea><div class="section-label">⚙️ 主线大纲</div><textarea id="plotSet" rows="10"></textarea></div>
+                <div class="tab-pane" id="pane-global"><div class="section-label">🎭 全局提示词</div><textarea id="globalPrompt" rows="10" placeholder="你是一位擅长细腻情感的言情小说家。"></textarea><div class="section-label">✍️ 行文规范</div><textarea id="writingStyle" rows="10" placeholder="文风细腻，多用心理描写。"></textarea></div>
+<div class="tab-pane active" id="pane-log"><div class="section-label">📜 日志 · 提示历史（最多 50 条）<button id="clearLogBtn" class="glass-btn" style="margin-left:8px;padding:2px 8px;font-size:0.6rem;"><i class="fas fa-trash"></i> 清空</button></div><div id="logList"></div><div id="storageWarnBar" role="alert"><div class="sw-main">⚠️ 存储空间已达（<span id="swPct">0</span>%）！</div><div class="sw-mid">请尽快迁移数据！</div><div class="sw-sub">否则将无法保存！</div></div><div id="sysPanel">
+        <div class="sys-row"><span class="sys-k">🕐 当前日期时间</span><span class="sys-v" id="sysClock">—</span></div>
+        <div class="sys-row"><span class="sys-k">⏱ 当前计费时段</span><span class="sys-v" id="sysTier">—</span></div>
+        <div class="sys-row"><span class="sys-k">💰 本次消费金额</span><span class="sys-v" id="sysCost">$0.00</span></div>
+        <div class="sys-row"><span class="sys-k">⏳ 本次使用时长</span><span class="sys-v" id="sysUptime">—</span></div>
+        <div class="sys-row"><span class="sys-k">⌨️ 本次输入字数</span><span class="sys-v" id="sysInput">0</span></div>
+        <div class="sys-row"><span class="sys-k">📝 本次生成字数</span><span class="sys-v" id="sysGen">0</span></div>
+    </div></div>
+            </div>
+        </div>
+    </div>
+    <div class="status-bar"><span>📄 字数：<span id="wordCount">0</span></span><span>📚 上下文前<span id="ctxNum">2</span>章</span><span>💾 <span id="saveStatus">已同步</span></span><span id="conflictCheckStatus" style="display:none;">🔍 检测中...</span></div>
+</div>
+
+<!-- 模态框 -->
+<div id="branchModal" class="modal"><div class="modal-card" style="width:1240px;max-width:96vw;max-height:none;overflow:visible;"><h3><i class="fas fa-code-branch"></i> 续写走向 · 选择一条继续</h3><div id="branchCardWrap"></div><div style="display:flex;gap:10px;margin-top:16px;justify-content:flex-end;"><button id="closeBranchBtn" class="glass-btn">取消</button></div></div></div>
+<div id="apiModal" class="modal"><div class="modal-card" style="max-width:680px;"><h3>⚙️ API 调参</h3><div style="background:#3A2A2A;border-radius:12px;padding:8px 12px;margin-bottom:10px;font-size:0.65rem;color:#FFA070;"><i class="fas fa-shield-alt"></i> ⚠️ API Key 仅存储在浏览器本地；调用 AI 功能时，Key 与正文/设定会随请求发送到你配置的 API 服务商（默认 DeepSeek）。请妥善保管，勿分享给他人。</div><div class="api-tabs" style="display:flex;gap:6px;margin-bottom:12px;"><button class="api-tab glass-btn active" data-apitab="main" style="flex:1;padding:8px 0;">✍️ 正文 API</button><button class="api-tab glass-btn" data-apitab="polish" style="flex:1;padding:8px 0;">🔍 审稿 API</button><button class="api-tab glass-btn" data-apitab="image" style="flex:1;padding:8px 0;opacity:0.45;cursor:not-allowed;" title="生图功能规划中（仅 EXE 版实装）">🎨 生图 API</button><button class="api-tab glass-btn" data-apitab="act" style="flex:1;padding:8px 0;">🎭 扮演 API</button></div><div id="apiPane-main"><input type="text" id="apiUrlInp" placeholder="API地址"><input type="password" id="apiKeyInp" placeholder="API Key"><input type="text" id="modelInp" placeholder="模型"><div id="pricingHint" style="font-size:0.62rem;color:#8A84A8;margin:-2px 0 6px;">DeepSeek 价格按官方 USD / 1M token 估算；未知模型不计费</div><input type="text" id="stopWordsInp" placeholder="停止词（逗号分隔，可选）"><div class="range-grid"><div class="range-item"><span class="range-label">温度 (0.1~2.0)</span><input type="number" id="tempRange" min="0.1" max="2" step="0.1" value="1.0"></div><div class="range-item"><span class="range-label">核采样 Top-p (0.75~1.25)</span><input type="number" id="topPRange" min="0.75" max="1.25" step="0.01" value="0.92"></div><div class="range-item"><span class="range-label">存在惩罚 (0.0~1.5)</span><input type="number" id="presRange" min="0" max="1.5" step="0.1" value="0.5"></div><div class="range-item"><span class="range-label">频率惩罚 (0.0~1.0)</span><input type="number" id="freqRange" min="0" max="1" step="0.1" value="0.4"></div><div class="range-item"><span class="range-label">重复惩罚 (1.00~1.25)</span><input type="number" id="repPenaltyRange" min="1" max="1.25" step="0.05" value="1.15"></div><div class="range-item"><span class="range-label">前文摘要 (1-50)</span><input type="number" id="ctxRange" min="1" max="50" step="1" value="5"></div></div><div class="range-row"><span style="width:auto;white-space:nowrap;">Maxtokens (3000~90000)</span><input type="number" id="maxTokensInp" min="3000" max="90000" value="60000" style="width:390px;margin-left:auto;margin-bottom:0;"></div><div class="range-row"><span style="width:auto;white-space:nowrap;">推理强度（思考模式）</span><input type="range" id="reasoningRange" min="0" max="2" step="1" value="1"><span id="reasoningVal">high</span></div><div class="range-row" style="align-items:center;"><span>💭 思考模式</span><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="thinkingCheck" style="width:auto;margin:0;"> 开启后创意参数失效，且增加耗时，请谨慎开启</label></div><div class="range-row" style="align-items:center;"><span>🧭 续写自动</span><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="branchAutoSendCheck" style="width:auto;margin:0;"> 开启后自动续写生文（默认关，自动回填消息栏）</label></div><div class="range-row" style="align-items:center;"><span>🔄 重写自动</span><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="rewriteAutoSendCheck" style="width:auto;margin:0;"> 开启后自动重写生文（默认关，自动回填消息栏）</label></div><div class="range-row" style="align-items:center;"><span>📚 连发章数</span><label style="display:flex;align-items:center;gap:6px;"> 一次性连续生成多个章节的数目（2~10）<input type="number" id="multiChapCountInp" min="2" max="10" step="1" value="3" style="width:70px;margin:0;"></label></div></div><div id="apiPane-polish" style="display:none;"><div style="background:#2A3A3A;border-radius:12px;padding:6px 10px;margin-bottom:10px;font-size:0.65rem;color:#7AC0A8;"><i class="fas fa-search"></i> 审稿 API 用于润色审查（DeepSeek：默认开启思考模式，仅推理强度可调，对同人内容宽松）</div><input type="text" id="polishUrlInp" placeholder="审稿 API 地址"><input type="password" id="polishKeyInp" placeholder="审稿 API Key"><input type="text" id="polishModelInp" placeholder="模型（如 deepseek-flash）"><div class="range-row" style="align-items:center;"><span>⚙️ 参数模式</span><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="polishParamCheck" style="width:auto;margin:0;"> 开启后思考模式失效，随机性增加，请谨慎开启</label></div><div id="polishParamGrid" class="range-grid" style="display:none;"><div class="range-item"><span class="range-label">温度 (0~2)</span><input type="number" id="polishTempRange" min="0" max="2" step="0.1" value="0.5"></div><div class="range-item"><span class="range-label">核采样 Top-p (0~1)</span><input type="number" id="polishTopPRange" min="0" max="1" step="0.01" value="0.87"></div><div class="range-item"><span class="range-label">存在惩罚 (0~2)</span><input type="number" id="polishPresRange" min="0" max="2" step="0.1" value="0"></div><div class="range-item"><span class="range-label">频率惩罚 (0~2)</span><input type="number" id="polishFreqRange" min="0" max="2" step="0.1" value="0.1"></div><div class="range-item"><span class="range-label">重复惩罚 (0~2)</span><input type="number" id="polishRepRange" min="0" max="2" step="0.1" value="1"></div></div><div class="range-row"><span>🧠 推理强度</span><input type="range" id="polishReasoningRange" min="0" max="2" step="1" value="2"><span id="polishReasoningVal">max</span></div><div class="range-row"><span style="width:auto;white-space:nowrap;">Maxtokens (3000~90000)</span><input type="number" id="polishMaxTokensInp" min="3000" max="90000" value="50000" style="width:390px;margin-left:auto;margin-bottom:0;"></div></div><div id="apiPane-image" style="display:none;"><div style="background:#2A2A3A;border-radius:12px;padding:24px;text-align:center;color:#8A84A8;font-size:0.8rem;"><i class="fas fa-palette" style="font-size:1.4rem;display:block;margin-bottom:8px;"></i>🎨 生图功能规划中（仅 EXE 版实装），敬请期待</div></div><div id="apiPane-act" style="display:none;"><div style="background:#2A2A3A;border-radius:12px;padding:6px 10px;margin-bottom:10px;font-size:0.65rem;color:#B8B4D0;"><i class="fas fa-masks-theater"></i> 🎭 扮演 API 用于角色试演（默认 deepseek-flash；对话 10 轮上限防 token 失控；摘要请求复用本 API）</div><input type="text" id="actUrlInp" placeholder="扮演 API 地址"><input type="password" id="actKeyInp" placeholder="扮演 API Key"><input type="text" id="actModelInp" placeholder="模型（默认 deepseek-flash）"><div class="range-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px;"><div class="range-item"><span class="range-label">温度 (0.1~2.0)</span><input type="number" id="actTempRange" min="0.1" max="2" step="0.1" value="0.7"></div><div class="range-item"><span class="range-label">台词长度 (500~1500)</span><input type="number" id="actMaxTokensInp" min="500" max="1500" step="1" value="800" title="单轮回复输出上限（token）"></div><div class="range-item"><span class="range-label">对话轮数 (5~30)</span><input type="number" id="actRoundsInp" min="5" max="30" step="1" value="10" title="一来一回算一轮，达上限自动结束试演"></div></div><div class="range-row" style="align-items:center;"><span>🧬 人设注入</span><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="actPersonaCheck" style="width:auto;margin:0;" checked> 注入本书背景与 A/B 精准人设</label></div><div class="range-row" style="align-items:center;"><span>🎭 口吻约束</span><label style="display:flex;align-items:center;gap:6px;"><input type="checkbox" id="actToneCheck" style="width:auto;margin:0;" checked> 强制纯台词+人设口吻（关闭可带少量旁白）</label></div></div><div style="display:flex;gap:10px;margin-top:16px;"><button id="testApiBtn" class="glass-btn">测试连接</button><button id="saveApiBtn" class="glass-btn">保存</button><button id="closeApiBtn" class="glass-btn">取消</button></div></div></div>
+<div id="sbOverlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.55);z-index:1500;"></div>
+<div class="sb-progress" id="sbProgressWrap" style="display:none;"><div class="sb-progress-bar"><div class="sb-progress-fill" id="sbProgressFill"></div></div><div class="sb-progress-text" id="sbProgressText"></div><div class="sb-progress-warn" id="sbProgressWarn">⚠️ 请勿关闭网页，等待AI生成中...</div><div class="sb-progress-retry" id="sbProgressRetry"></div><div class="sb-progress-multi" id="sbProgressMulti"></div><div class="sb-progress-close" id="sbProgressClose" style="display:none;"><button class="glass-btn" id="sbProgressCloseBtn">关闭</button></div></div>
+<div id="startBookModal" class="modal"><div class="modal-card start-book-card">
+    <h3><i class="fas fa-bolt"></i> 一键起书（新手向）</h3>
+    <div class="sb-section">
+        <div class="sb-title">① API 配置 · 保存后自动同步后台，默认 DeepSeek</div>
+        <div class="sb-api-row"><input type="password" id="sbApiKeyInp" placeholder="API Key"><select id="sbModelInp"><option value="deepseek-flash">deepseek-flash</option><option value="deepseek-v4-pro">deepseek-v4-pro</option></select><button id="sbTestBtn" class="glass-btn">测试</button><button id="sbSaveBtn" class="glass-btn">保存</button></div>
+    </div>
+    <div class="sb-section">
+        <div class="sb-title">② 预设模板 · 页签切换，内容自由修改</div>
+        <div class="sb-tabs" id="sbTabs"><button class="sb-tab active" data-tpl="xh">玄幻升级</button><button class="sb-tab" data-tpl="yj">异界规则</button><button class="sb-tab" data-tpl="ds">都市逆袭</button><button class="sb-tab" data-tpl="rs">日式轻文</button><button class="sb-tab" data-tpl="own">自行填写</button></div>
+        <div class="sb-tpl-row"><textarea id="sbPromptInp" rows="7" placeholder="你是一名专业的网文小说作家。"></textarea><textarea id="sbStyleInp" rows="7" placeholder="文风细腻，多用心理描写。"></textarea></div>
+    </div>
+    <div class="sb-section">
+        <div class="sb-title">③ 核心要素 · 适配模板，建议原创，可以留空</div>
+        <div class="sb-core-row"><div class="sb-core-left"><textarea id="sbCharInp" rows="4" placeholder="主角设定：身份姓名 / 处境 / 性格标签"></textarea><textarea id="sbSellInp" rows="4" placeholder="核心卖点：反套路 / 有限制金手指"></textarea></div><textarea id="sbIdeaInp" rows="7" placeholder="首章灵感 / 主线大纲 / 情感基调，或留空"></textarea></div>
+    </div>
+    <div class="sb-section">
+        <div class="sb-title">④ 目标平台 · 默认起点网文风格</div>
+        <div class="sb-plat-row" id="sbPlatRow"><button class="sb-plat active" data-plat="">起点中文网</button><button class="sb-plat" data-plat="fhq">番茄小说</button><button class="sb-plat" data-plat="cim">刺猬猫</button><button class="sb-plat" data-plat="fl">飞卢中文网</button><button class="sb-plat" data-plat="qm">七猫小说</button></div>
+    </div>
+    <div class="sb-footer"><button id="sbResetBtn" class="glass-btn">重置文本框</button><span class="sb-hint"></span><div class="sb-retry-wrap" id="sbRetryWrap"><button class="sb-retry-btn" id="sbRetryBtn">失败自动重试 0次 <i class="fas fa-caret-down"></i></button><div class="sb-retry-menu" id="sbRetryMenu" style="display:none;"><div class="sb-retry-item" data-n="0">0次</div><div class="sb-retry-item" data-n="1">1次</div><div class="sb-retry-item" data-n="2">2次</div></div></div><button id="sbStartBtn" class="sb-start-btn"><i class="fas fa-bolt"></i> 开始起书</button><button id="sbCloseBtn" class="glass-btn">关闭</button></div>
+</div></div>
+<div id="batchTagModal" class="modal"><div class="modal-card" style="width:720px;max-width:92%;">
+        <h3>🎯 批量标签 · <span id="batchTagLibName"></span></h3>
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+            <input type="text" id="batchTagName" placeholder="输入标签名（输入 -标签名 = 批量删除该标签高亮）" style="flex:1;">
+            <button id="batchTagApply" class="glass-btn">✓ 确定</button>
+        </div>
+        <div id="batchTagPresets" style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;"></div>
+        <input type="text" id="batchTagSearch" placeholder="🔍 搜索要打标签的角色 / 服装…">
+        <div id="batchTagList" style="max-height:38vh;overflow-y:auto;background:#0E0D14;border:1px solid #3A3452;border-radius:10px;padding:8px;margin-top:8px;"></div>
+        <div style="margin-top:10px;display:flex;gap:8px;align-items:center;">
+            <button id="batchTagAll" class="glass-btn">☑ 全选</button>
+            <button id="batchTagNone" class="glass-btn">全不选</button>
+            <span id="batchTagCount" style="font-size:0.7rem;color:#6EC6F8;font-weight:600;margin-right:8px;">已勾选 0 项</span>
+            <span style="font-size:0.62rem;color:#6A627A;flex:1;line-height:1.6;">勾选要打标签的项 → 输入标签名点确定批量加高亮；输入「-标签名」批量取消该标签高亮；标签名本身不会被删除（原设/自设/预设名只能靠「新增预设标签」的 - 号删）</span>
+            <button id="batchTagClose" class="glass-btn">关闭</button>
+        </div>
+    </div></div>
+<div id="roleModal" class="modal"><div class="modal-card" style="width:900px;max-width:94%;"><h3><i class="fas fa-users"></i> 本书角色库 · <span id="roleBookName"></span></h3><div style="display:flex;gap:10px;margin:12px 0;flex-wrap:wrap;"><button id="importGlobalCharsBtn" class="glass-btn"><i class="fas fa-download"></i> 从素材库导入</button><button id="exportToGlobalCharBtn" class="glass-btn"><i class="fas fa-upload"></i> 导出到素材库</button><button id="newCharBtn" class="glass-btn"><i class="fas fa-plus"></i> 新增角色</button><button id="charTagAddBtn" class="glass-btn" title="新增单次标签"><i class="fas fa-tag"></i> 新增单次标签</button><button id="charTagMgrBtn" class="glass-btn" title="新增预设标签"><i class="fas fa-bookmark"></i> 新增预设标签</button><button id="charBatchTagBtn" class="glass-btn" title="批量给多个角色加/删标签"><i class="fas fa-tags"></i> 批量标签</button><button id="exportBookCharsBtn" class="glass-btn"><i class="fas fa-file-export"></i> 导出 JSON</button></div><div class="lib-container"><div class="lib-list"><h4>角色列表</h4><div class="precision-search"><i class="fas fa-search"></i><input type="text" id="libCharSearch" placeholder="搜索角色…"><i class="fas fa-times precision-clear" id="libCharSearchClear"></i></div><div id="charList" style="max-height:50vh;overflow-y:auto;"></div></div><div class="lib-editor" style="resize:horizontal;overflow:auto;min-width:240px;max-width:65%;"><h4>编辑角色</h4><input type="text" id="charName" placeholder="姓名"><div class="tag-row"><div class="tag-presets" id="charTagPresets"></div></div><textarea id="charAppearance" rows="3" placeholder="外貌体征"></textarea><textarea id="charPersonality" rows="2" placeholder="性格"></textarea><textarea id="charSpecial" rows="3" placeholder="服装及其他设定"></textarea><textarea id="charRelation" rows="3" placeholder="身份关联"></textarea><div id="charGrowthBox" style="margin-top:6px;"><div style="font-size:0.65rem;color:#8A84A8;margin-bottom:4px;">📈 成长经历</div><div id="charGrowthList" style="max-height:120px;overflow-y:auto;background:#1A1825;border:1px solid rgba(255,255,255,0.14);border-radius:8px;padding:6px 8px;font-size:0.68rem;color:#B8B4D0;white-space:pre-wrap;"></div></div><div><button id="saveCharBtn" class="glass-btn">保存角色</button><button id="cancelEditCharBtn" class="glass-btn">取消编辑</button></div></div></div><div><button id="closeRoleModal" class="glass-btn">关闭</button></div></div></div>
+<div id="globalRoleModal" class="modal"><div class="modal-card" style="width:900px;max-width:94%;"><h3><i class="fas fa-box"></i> 素材角色库</h3><div style="display:flex;gap:10px;margin:12px 0;flex-wrap:wrap;"><button id="addGlobalCharBtn" class="glass-btn"><i class="fas fa-plus"></i> 新增素材角色</button><button id="globalCharTagAddBtn" class="glass-btn" title="新增单次标签"><i class="fas fa-tag"></i> 新增单次标签</button><button id="globalCharTagMgrBtn" class="glass-btn" title="新增预设标签"><i class="fas fa-bookmark"></i> 新增预设标签</button><button id="globalCharBatchTagBtn" class="glass-btn" title="批量给多个素材角色加/删标签"><i class="fas fa-tags"></i> 批量标签</button><button id="exportGlobalCharsJsonBtn" class="glass-btn"><i class="fas fa-download"></i> 导出 JSON</button><button id="importGlobalCharsJsonBtn" class="glass-btn"><i class="fas fa-upload"></i> 导入 JSON</button></div><div class="lib-container"><div class="lib-list"><h4>角色列表</h4><div class="precision-search"><i class="fas fa-search"></i><input type="text" id="libGlobalCharSearch" placeholder="搜索角色…"><i class="fas fa-times precision-clear" id="libGlobalCharSearchClear"></i></div><div id="globalCharList" style="max-height:50vh;overflow-y:auto;"></div></div><div class="lib-editor" style="resize:horizontal;overflow:auto;min-width:240px;max-width:65%;"><h4>编辑角色</h4><input type="text" id="globalCharName" placeholder="姓名"><div class="tag-row"><div class="tag-presets" id="globalCharTagPresets"></div></div><textarea id="globalCharAppearance" rows="3" placeholder="外貌体征"></textarea><textarea id="globalCharPersonality" rows="2" placeholder="性格"></textarea><textarea id="globalCharSpecial" rows="3" placeholder="服装及其他设定"></textarea><textarea id="globalCharRelation" rows="3" placeholder="身份关联"></textarea><div><button id="saveGlobalCharBtn" class="glass-btn">保存</button><button id="cancelGlobalCharBtn" class="glass-btn">取消</button></div></div></div><div><button id="closeGlobalRoleModal" class="glass-btn">关闭</button></div></div></div>
+<div id="actionModal" class="modal"><div class="modal-card" style="width:900px;max-width:94%;"><h3><i class="fas fa-fist-raised"></i> 全局动作库</h3><div style="display:flex;gap:10px;margin:12px 0;"><button id="addGlobalActionBtn" class="glass-btn"><i class="fas fa-plus"></i> 新增动作</button><button id="exportGlobalActionsJsonBtn" class="glass-btn"><i class="fas fa-download"></i> 导出 JSON</button><button id="importGlobalActionsJsonBtn" class="glass-btn"><i class="fas fa-upload"></i> 导入 JSON</button></div><div class="lib-container"><div class="lib-list"><h4>动作列表</h4><div class="precision-search"><i class="fas fa-search"></i><input type="text" id="libActionSearch" placeholder="搜索动作…"><i class="fas fa-times precision-clear" id="libActionSearchClear"></i></div><div id="actionList" style="max-height:50vh;overflow-y:auto;"></div></div><div class="lib-editor" style="resize:horizontal;overflow:auto;min-width:240px;max-width:65%;"><h4>编辑动作</h4><input type="text" id="globalActionName" placeholder="动作名称"><textarea id="globalActionKeyPoints" rows="3" placeholder="动作要领"></textarea><textarea id="globalActionLines" rows="3" placeholder="台词运用"></textarea><textarea id="globalActionDescriptionTips" rows="3" placeholder="描写建议"></textarea><div><button id="saveGlobalActionBtn" class="glass-btn">保存</button><button id="cancelGlobalActionBtn" class="glass-btn">取消</button></div></div></div><div><button id="closeActionModal" class="glass-btn">关闭</button></div></div></div>
+<div id="costumeModal" class="modal"><div class="modal-card" style="width:900px;max-width:94%;"><h3><i class="fas fa-tshirt"></i> 全局服装库</h3><div style="display:flex;gap:10px;margin:12px 0;flex-wrap:wrap;"><button id="addGlobalCostumeBtn" class="glass-btn"><i class="fas fa-plus"></i> 新增服装</button><button id="globalCostumeTagAddBtn" class="glass-btn" title="新增单次标签"><i class="fas fa-tag"></i> 新增单次标签</button><button id="globalCostumeTagMgrBtn" class="glass-btn" title="新增预设标签"><i class="fas fa-bookmark"></i> 新增预设标签</button><button id="globalCostumeBatchTagBtn" class="glass-btn" title="批量给多件服装加/删标签"><i class="fas fa-tags"></i> 批量标签</button><button id="exportGlobalCostumesJsonBtn" class="glass-btn"><i class="fas fa-download"></i> 导出 JSON</button><button id="importGlobalCostumesJsonBtn" class="glass-btn"><i class="fas fa-upload"></i> 导入 JSON</button></div><div class="lib-container"><div class="lib-list"><h4>服装列表</h4><div class="precision-search"><i class="fas fa-search"></i><input type="text" id="libCostumeSearch" placeholder="搜索服装…"><i class="fas fa-times precision-clear" id="libCostumeSearchClear"></i></div><div id="costumeList" style="max-height:50vh;overflow-y:auto;"></div></div><div class="lib-editor" style="resize:horizontal;overflow:auto;min-width:240px;max-width:65%;"><h4>编辑服装</h4><input type="text" id="globalCostumeName" placeholder="服装名称"><div class="tag-row"><div class="tag-presets" id="globalCostumeTagPresets"></div></div><textarea id="globalCostumeStyle" rows="3" placeholder="详细款式"></textarea><textarea id="globalCostumeDescTips" rows="3" placeholder="描写建议"></textarea><div><button id="saveGlobalCostumeBtn" class="glass-btn">保存</button><button id="cancelGlobalCostumeBtn" class="glass-btn">取消</button></div></div></div><div><button id="closeCostumeModal" class="glass-btn">关闭</button></div></div></div>
+<div id="statsModal" class="modal"><div class="modal-card">
+    <div class="stats-head">
+        <h3><i class="fas fa-chart-line"></i> 写作统计</h3>
+        <div class="stats-tabs" id="statsTabs"></div>
+        <div class="stats-actions">
+            <button id="statsClearBtn" class="glass-btn" style="font-size:0.65rem;padding:4px 10px;"><i class="fas fa-eraser"></i> 清空</button>
+            <button id="statsExportBtn" class="glass-btn" style="font-size:0.65rem;padding:4px 10px;"><i class="fas fa-download"></i> 导出</button>
+            <button id="statsCloseBtn" class="stats-close" title="关闭"><i class="fas fa-xmark"></i></button>
+        </div>
+    </div>
+    <div id="statsBody"></div>
+    <div class="stats-hint" id="statsHint"></div>
+</div></div>
+<div id="forbiddenWordsModal" class="modal"><div class="modal-card"><h3><i class="fas fa-ban"></i> 本书禁用词 · <span id="forbiddenBookName"></span></h3><div><button id="newForbiddenWordBtn" class="glass-btn"><i class="fas fa-plus"></i> 新增禁用词</button></div><div class="lib-container"><div class="lib-list"><h4>禁用词列表</h4><div id="forbiddenList" style="max-height:50vh;overflow-y:auto;"></div></div><div class="lib-editor"><h4>添加/编辑</h4><input type="text" id="forbiddenWordInput" placeholder="要禁用的词或短语"><div><button id="saveForbiddenWordBtn" class="glass-btn">保存</button><button id="cancelForbiddenWordBtn" class="glass-btn">取消</button></div></div></div><div><button id="closeForbiddenModal" class="glass-btn">关闭</button></div></div></div>
+
+<!-- v7.9 角色试演大型卡片：左栏选角（你扮演/AI扮演 上下叠放 + 当前对话场景及设定）+ 右栏对话区 -->
+<div id="roleplayModal" class="modal"><div class="modal-card" style="width:68vw;max-width:68vw;height:92vh;max-height:92vh;overflow:hidden;display:flex;flex-direction:column;">
+    <h3 style="flex-shrink:0;"><i class="fas fa-masks-theater"></i> 角色试演 <span id="roleplayClose" class="close-conflict"><i class="fas fa-times"></i></span></h3>
+    <div style="display:flex;flex:1;min-height:0;gap:12px;padding:0 14px 12px;">
+        <div style="width:320px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;background:#14121F;border-radius:12px;padding:10px;min-height:0;">
+            <div>
+                <div style="font-size:0.72rem;color:#B8B4D0;margin-bottom:4px;">🎭 你扮演（A）<span id="roleplayCountA" style="color:#6A627A;margin-left:4px;font-size:0.65rem;"></span><span id="roleplayLockA" style="display:none;color:#8A84A8;margin-left:4px;font-size:0.65rem;">🔒 已锁定</span></div>
+                <input type="text" id="roleplaySearchA" placeholder="搜索角色…" style="width:100%;box-sizing:border-box;background:#0E0D14;border:1px solid #3A3452;border-radius:8px;padding:5px 8px;color:#EDEAF2;font-size:0.75rem;margin-bottom:4px;">
+                <div id="roleplayListA" style="max-height:132px;overflow-y:auto;background:#0E0D14;border:1px solid #3A3452;border-radius:8px;padding:4px;transition:opacity 0.2s;"></div>
+            </div>
+            <div>
+                <div style="font-size:0.72rem;color:#B8B4D0;margin-bottom:4px;">🤖 AI 扮演（B）<span id="roleplayCountB" style="color:#6A627A;margin-left:4px;font-size:0.65rem;"></span><span id="roleplayLockB" style="display:none;color:#8A84A8;margin-left:4px;font-size:0.65rem;">🔒 已锁定</span></div>
+                <input type="text" id="roleplaySearchB" placeholder="搜索角色…" style="width:100%;box-sizing:border-box;background:#0E0D14;border:1px solid #3A3452;border-radius:8px;padding:5px 8px;color:#EDEAF2;font-size:0.75rem;margin-bottom:4px;">
+                <div id="roleplayListB" style="max-height:132px;overflow-y:auto;background:#0E0D14;border:1px solid #3A3452;border-radius:8px;padding:4px;transition:opacity 0.2s;"></div>
+            </div>
+            <div style="flex:1;min-height:0;display:flex;flex-direction:column;">
+                <div style="font-size:0.72rem;color:#B8B4D0;margin-bottom:4px;">📝 当前对话场景及设定</div>
+                <textarea id="roleplayScene" rows="5" placeholder="如：马路上，向 B 搭话。可补充世界观设定或特殊名词…（首轮发送后锁定）" style="flex:1;width:100%;box-sizing:border-box;background:#0E0D14;border:1px solid #3A3452;border-radius:8px;padding:8px;color:#EDEAF2;font-size:0.8rem;resize:none;"></textarea>
+                <div id="roleplaySceneLockTip" style="display:none;font-size:0.65rem;color:#8A84A8;margin-top:4px;">🔒 已随首轮对话生效，锁定</div>
+            </div>
+        </div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;">
+            <div id="roleplayChat" style="flex:1;overflow-y:auto;padding:12px 16px;background:#12101C;border-radius:12px;min-height:0;"></div>
+            <div style="display:flex;gap:8px;flex-shrink:0;align-items:stretch;">
+                <textarea id="roleplayInput" placeholder="输入台词…（Ctrl+Enter 发送）" rows="4" style="flex:1;background:#0E0D14;border:1px solid #3A3452;border-radius:12px;padding:8px 12px;color:#EDEAF2;font-size:14px;resize:none;line-height:1.5;"></textarea>
+                <div style="display:flex;flex-direction:column;gap:6px;justify-content:flex-end;">
+                    <button id="roleplayEnd" class="glass-btn" style="background:#4A2A2A;justify-content:center;">⏹ 结束对话</button>
+                    <button id="roleplayStop" class="glass-btn" disabled style="justify-content:center;">停止</button>
+                    <button id="roleplaySend" class="glass-btn" style="justify-content:center;">发送</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div></div>
+
+<!-- 本书关系图模态框 -->
+<div id="relationGraphModal" class="modal"><div class="modal-card" style="width:96vw;max-width:96vw;height:94vh;max-height:94vh;overflow:hidden;display:flex;flex-direction:column;">
+<h3><i class="fas fa-project-diagram"></i> 本书关系图 · <span id="relationBookName"></span></h3>
+<div style="font-size:0.6rem;color:#8A84A8;margin:4px 0;">拖拽节点调整布局 · 点击角色添加关系 · 关系名称自由填写 · 左侧页签切换可拖对象（0=人物 / N=区域N）</div>
+<div id="graphContainer" style="width:100%;flex:1;background:#0E0D14;border-radius:16px;border:1px solid #22202C;overflow:hidden;position:relative;min-height:300px;display:flex;">
+<div id="graphRegionTabs" style="width:80px;flex-shrink:0;display:flex;flex-direction:column;gap:4px;padding:6px;overflow-y:auto;background:rgba(14,13,20,0.55);border-right:1px solid rgba(255,255,255,0.08);"></div>
+<svg id="graphSvg" style="display:block;flex:1;min-width:0;"></svg>
+</div>
+<div style="display:flex;gap:10px;margin-top:10px;flex-shrink:0;">
+<button id="addRelationBtn" class="glass-btn"><i class="fas fa-plus"></i> 添加关系</button>
+<button id="graphRegionBtn" class="glass-btn"><i class="fas fa-shapes"></i> 添加区域</button>
+<button id="graphSnapBtn" class="glass-btn graph-snap-btn"><i class="fas fa-border-all"></i> 网格吸附</button>
+<button id="graphExportBtn" class="glass-btn"><i class="fas fa-download"></i> 导出图片</button>
+<button id="resetGraphLayoutBtn" class="glass-btn"><i class="fas fa-sync-alt"></i> 重置布局</button>
+<button id="closeRelationModal" class="glass-btn">关闭</button>
+</div></div></div>
+<div id="regionModal" class="modal"><div class="modal-card" style="width:400px;"><h3><i class="fas fa-shapes"></i> 创建区域</h3><div style="margin:10px 0;font-size:0.65rem;color:#8A84A8;">区域为视觉参考分组，不参与创作逻辑。大小=可容纳的角色数量（1~50，自动最优排布）。</div><div class="range-row"><span>形状</span><select id="regionShapeSel" style="flex:1;background:#13121C;border:1px solid #3A3452;border-radius:8px;padding:6px;color:#EDEAF2;"><option value="rect">矩形</option><option value="ellipse">椭圆</option><option value="hex">六边形</option></select></div><div class="range-row"><span>大小</span><input type="number" id="regionSizeInp" min="1" max="50" value="3" style="flex:1;background:#13121C;border:1px solid #3A3452;border-radius:8px;padding:6px;color:#EDEAF2;"></div><div class="range-row"><span>名称</span><input type="text" id="regionNameInp" maxlength="20" placeholder="区域名称（≤20字）" style="flex:1;background:#13121C;border:1px solid #3A3452;border-radius:8px;padding:6px;color:#EDEAF2;"></div><div style="display:flex;gap:10px;margin-top:16px;"><button id="saveRegionBtn" style="background:#2A6EA4;">创建</button><button id="closeRegionBtn" class="glass-btn">取消</button></div></div></div>
+
+<!-- 使用指南模态框 -->
+<div id="guideModal" class="modal">
+    <div class="modal-card" style="max-width:1300px;max-height:none;overflow:visible;">
+        <h3><i class="fas fa-question-circle"></i> 快速指南</h3>
+        <div class="guide-content">
+            <div class="guide-grid">
+                <div class="guide-card"><h4>⚡ 一键起书</h4><p>点绿色「一键起书」，AI 从零生成书名、世界观、大纲、第一章正文与摘要。</p></div>
+                <div class="guide-card"><h4>🔁 失败重试</h4><p>起书失败或字数不足自动重试（0/1/2 次可调）。</p></div>
+                <div class="guide-card"><h4>📝 单章摘要</h4><p>每章附 150 字摘要可编辑，前文只注入摘要省成本。</p></div>
+                <div class="guide-card"><h4>🔀 并发双版</h4><p>首次生成同时出 A/B 两版对比，选一保留，费用×2。</p></div>
+                <div class="guide-card"><h4>⌨️ 快捷键</h4><p><b>Ctrl+Enter</b> 生成 · <b>Ctrl+G</b> 续写 · <b>Ctrl+F</b> 查找 · <b>Ctrl+H</b> 替换 · <b>Ctrl+Z/Y</b> 撤销</p></div>
+                <div class="guide-card"><h4>🎯 精准模式</h4><p>点 🎯 勾选本章角色、动作、服装，未勾选不注入。</p></div>
+                <div class="guide-card"><h4>📐 网文排版</h4><p>叙述顶格、对话缩进 2 格、段间空行、每段≤120 字。</p></div>
+                <div class="guide-card"><h4>🧼 去 AI 味</h4><p>口语化 + 废话动作 + 错位描写 + 禁词清单。</p></div>
+                <div class="guide-card"><h4>📚 连发多章</h4><p>一次连续生成 2~10 章：第 1 章按指令创作，之后逐章自动续写，方向目标贯穿全程。</p></div>
+                <div class="guide-card"><h4>💭 思考模式</h4><p>API 调参可开启，AI 先规划再写正文，low/high/max 三档。</p></div>
+                <div class="guide-card"><h4>🎭 更多功能</h4><p>角色成长 · 续写三走向 · 润色 · 吐槽 · 角色试演。</p></div>
+                <div class="guide-card"><h4>🎯 创作逻辑链</h4><p>全局提示词 → 行文规范 → 角色 → 动作 → 服装 → 禁用词 → 世界观 → 大纲。</p></div>
+            </div>
+            <button id="openFullGuideBtn" class="glass-btn" style="margin-top:16px;background:#3B8ED4;color:#fff;"><i class="fas fa-book-open"></i> 📖 完整版说明书</button>
+        </div>
+        <div class="modal-buttons" style="margin-top:20px;"><button id="closeGuideBtn" class="glass-btn">关闭</button></div>
+    </div>
+</div>
+
+<div id="fullGuideModal" class="modal">
+    <div class="modal-card" style="max-width:1100px;">
+        <h3><i class="fas fa-file-alt"></i> AI小说生成器 v9.0 完整说明</h3>
+        <div class="full-guide">
+            <h4>一、快速上手</h4>
+            <p><b>方式 A · 一键起书（新手向）</b>：左侧面板点绿色「⚡ 一键起书」→ 填 API Key → 选模板（玄幻升级/异界规则/都市逆袭/日式轻文）与目标平台（起点/番茄/刺猬猫/飞卢/七猫）→ 点「开始起书」，AI 从零生成书名、世界观·专有名词、主线大纲、第一章完整正文（3500~5000 字）与本章摘要。</p>
+            <p><b>方式 B · 新建小说</b>：左侧面板点「+ 新建小说」，输入书名创建空书 → 点 ⚙ 填 API Key → 聊天框输入指令 → Ctrl+Enter 生成章节。</p>
+            <hr>
+            
+            <h4>⚡ 一键起书详解（v8.0）</h4>
+            <p><b>流程</b>：填 API Key → 选模板与平台 → 填主角设定/核心卖点/创作指令（均可留空）→ 点「开始起书」→ 进度条流动展示 → 成功后自动建书并注入第一章。</p>
+            <p><b>4 套预设模板</b>：玄幻升级（升级即代价）/ 异界规则（试错即剧情）/ 都市逆袭（逆袭即清算）/ 日式轻文（吐槽即叙事），每套含全局提示词 + 行文规范，可在起书面板内编辑。</p>
+            <p><b>5 平台文风</b>：起点中文网（男频爽文）/ 番茄小说（免费流量）/ 刺猬猫（二次元轻文）/ 飞卢中文网（脑洞设定）/ 七猫小说（下沉市场），选中后自动注入对应风格。</p>
+            <p><b>去 AI 味</b>：口语语气词 + 废话动作 + 错位描写 + AI 高频禁词清单（出现即替换为具体动作或白描）。</p>
+            <p><b>网文排版</b>：叙述段落顶格、对话段落首行缩进 2 格、段间空行、每段 ≤120 字。</p>
+            <p><b>失败自动重试</b>：「开始起书」左侧下拉选重试次数（0/1/2 次，选中高亮）；起书失败或正文 <3500 字自动重试，重试时带字数反馈。</p>
+            <p><b>伪阶段进度窗口</b>：起书/续写/生文/重写/润色/续写走向统一进度条（独立居中 + 流动特效）；一键起书额外显示「已失败 N 次，正在起书第 N+1 次」。</p>
+            <hr>
+            <h4>二、⌨️ 全部快捷键一览</h4>
+            <table style="width:100%;font-size:0.7rem;border-collapse:collapse;">
+            <tr><td style="padding:3px 8px;background:#1A1825;"><b>Ctrl+Enter</b></td><td style="padding:3px 8px;">发送聊天指令，AI 开始生成新章节</td></tr>
+            <tr><td style="padding:3px 8px;background:#13121C;"><b>Ctrl+G</b></td><td style="padding:3px 8px;">续写下一章（基于已有章节末尾）</td></tr>
+            <tr><td style="padding:3px 8px;background:#1A1825;"><b>Ctrl+F</b></td><td style="padding:3px 8px;">在当前章节中查找文本</td></tr>
+            <tr><td style="padding:3px 8px;background:#13121C;"><b>Ctrl+H</b></td><td style="padding:3px 8px;">查找并替换文本</td></tr>
+            <tr><td style="padding:3px 8px;background:#1A1825;"><b>Ctrl+Z / Ctrl+Y</b></td><td style="padding:3px 8px;">撤销/重做编辑操作</td></tr>
+            <tr><td style="padding:3px 8px;background:#13121C;"><b>Ctrl+A</b></td><td style="padding:3px 8px;">全选当前章节文本</td></tr>
+            <tr><td style="padding:3px 8px;background:#1A1825;"><b>Ctrl+S</b></td><td style="padding:3px 8px;">保存当前章节（焦点不在输入框时）</td></tr>
+            </table>
+            <hr>
+            
+            <h4>三、🎯 精准模式</h4>
+            <p>点击聊天区右侧 <b>🎯</b> 按钮打开精准设定面板，控制 AI 生文时注入哪些角色、动作和服装设定。</p>
+            <p><b>背景</b>：默认全量注入角色库、动作库和服装库，大量无关设定稀释 AI 注意力。精准模式通过勾选，仅注入选中的条目。</p>
+            <p><b>操作</b>：点击🎯→三列面板：左列勾选本章出场角色、中列勾选本章用到的动作、右列勾选本章出场的服装→保存。按钮变绿表示精准模式开启。</p>
+            <p><b>校验</b>：至少选1个角色、动作或服装才能保存。点击「关闭精准模式」可恢复全量注入（关闭时**保留勾选**，下次开启直接沿用）。</p>
+            <p><b>快捷操作（v7.1）</b>：弹窗内支持「全选角色/动作/服装」「全部取消」「🎲 随机组合」（一键抽取 1 角色+3 动作+1 服装复制剪贴板）「📋 本次组合」（复制当前勾选的动作+服装名称，清洗括号说明）。</p>
+            <p><b>一次性（v7.2 更新）</b>：精准模式开启 = **下一次生文（新写/重写/续写）都是精准注入**，生成完成后自动关闭（勾选保留）。重写发起时若存在勾选会自动重新开启精准模式，按勾选精准注入。</p>
+            <p><b>建议</b>：日常对话勾出场角色+「日常对话」动作；打斗勾对战双方+「打斗」；感情戏勾情侣+相关动作；每章勾选实际出现的服装。</p>
+            <p><b>两种模式生文对比</b>：</p>
+            <table style="width:100%;font-size:0.65rem;border-collapse:collapse;margin:4px 0;">
+            <tr style="background:#1A1825;"><th style="padding:4px 8px;text-align:left;">设定来源</th><th style="padding:4px 8px;">非精准模式</th><th style="padding:4px 8px;">精准模式</th></tr>
+            <tr style="background:#13121C;"><td style="padding:4px 8px;">全局提示词 🌍</td><td style="padding:4px 8px;">✅ 全量注入</td><td style="padding:4px 8px;">✅ 全量注入</td></tr>
+            <tr style="background:#1A1825;"><td style="padding:4px 8px;">行文规范 ✍️</td><td style="padding:4px 8px;">✅ 全量注入</td><td style="padding:4px 8px;">✅ 全量注入</td></tr>
+            <tr style="background:#13121C;"><td style="padding:4px 8px;">角色关系图 🔗</td><td style="padding:4px 8px;">✅ 全量注入</td><td style="padding:4px 8px;">✅ 全量注入（不受精准影响）</td></tr>
+            <tr style="background:#13121C;"><td style="padding:4px 8px;">角色库 👥</td><td style="padding:4px 8px;">全部角色</td><td style="padding:4px 8px;">仅勾选的角色</td></tr>
+            <tr style="background:#1A1825;"><td style="padding:4px 8px;">动作库 💪</td><td style="padding:4px 8px;">全部动作</td><td style="padding:4px 8px;">仅勾选的动作</td></tr>
+            <tr style="background:#13121C;"><td style="padding:4px 8px;">服装库 👗</td><td style="padding:4px 8px;">全部服装</td><td style="padding:4px 8px;">仅勾选的服装</td></tr>
+            <tr style="background:#1A1825;"><td style="padding:4px 8px;">禁用词 🚫</td><td style="padding:4px 8px;">✅ 全量注入</td><td style="padding:4px 8px;">✅ 全量注入</td></tr>
+            <tr style="background:#1A1825;"><td style="padding:4px 8px;">世界观/情节/专有词 📖</td><td style="padding:4px 8px;">✅ 全量注入</td><td style="padding:4px 8px;">✅ 全量注入</td></tr>
+            </table>
+            <hr>
+            
+            <h4>四、📚 书架与章节管理</h4>
+            <p><b>新建小说</b>：左侧书架顶部「＋」图标或底部「＋新建小说」按钮。每本小说的数据独立存储。书架上每本小说卡片显示<b>章节数、角色数和总字数</b>。</p>
+            <p><b>切换小说</b>：点击书架中的小说卡片即可切换，当前编辑内容会自动保存。</p>
+            <p><b>删除小说</b>：点击小说卡片右侧 🗑 图标，需要二次确认。</p>
+            <p><b>章节列表</b>：左下面板展示当前小说所有章节。点击章节名切换到该章；<b>拖拽章节可重新排序</b>；每章右侧有重命名 ✎ 和删除 🗑 按钮。</p>
+            <p><b>新增章节</b>：章节列表顶部「＋」按钮，创建空白章节供手动书写。</p>
+            <hr>
+            
+            <h4>五、✍️ 编辑器操作</h4>
+            <p><b>◀ ▶</b> 按钮：切换到上一章/下一章</p>
+            <p><b>A+ / A-</b>：调整编辑器字体大小（12px~24px），偏好自动记忆</p>
+            <p><b>🔍 查找</b>：弹出查找栏，实时高亮所有匹配项，◀▶ 导航，支持替换单个或全部</p>
+            <p><b>💾 保存</b>：手动保存当前章节到本地存储</p>
+            <p><b>续写</b>：在已有最后章节的基础上，让 AI 自动生成下一章。可在聊天框输入额外指令（如"引入新角色"）来引导续写方向</p>
+            <p><b>重写（v7.2）</b>：点击重写 → 把本章原始指令回填到消息栏（可见可编辑）+ 还原当前精准勾选（精准模式开启时按勾选精准注入）；**发送按钮变重写态**（警示色+脉冲）标识「发送=重写本章」，防误新建章节；切换章节/发送完成自动退出重写态。重写前自动保存快照，可用「回滚」恢复；回滚按钮仅在重写真正生成文字后才亮起。</p>
+            <p><b>续写（v7.2）</b>：点击续写 → 先生成 3 个剧情走向卡片（标题+150 字大纲，注入精准角色+关系图+最新章摘要+前10章摘要（总量≤2000）+世界观+主线大纲，v8.5 起不再注入最新章开头/结尾500字），三方向固定架构：①主动攻略（男主计谋/能力/正向手段）②被动转折（突发事件打破僵局、男主可受限但仍有办法，不引入超自然/凶杀/未铺垫的隐藏真相）③女主视角（前半段女主与核心关联人物的羁绊日常，中后段男主切入形成对照）。选中卡片 → 大纲填入消息栏（可编辑）→ Ctrl+Enter 或「续写自动」开关自动续写；走向请求失败 → toast+日志+聊天区提示，无回退动作。</p>
+            <p><b>润色（v7.3）</b>：AI 审查并润色本章（审稿 API，默认 DeepSeek 思考模式）。审查三类——<b>大幅修改</b>（人设冲突、违背物理常识、时空混乱、不合理比喻，即使影响后文也标出，由作者后处理）、<b>小幅修改</b>（词语错误、逻辑小错位）、<b>不修改</b>（信息量零变化的措辞替换）。预览红（原句）/绿（新句）高亮，**每一处修改都附黄色理由说明**（说明改了什么、为什么更好，供你判断是否采纳）；正文可自由编辑、可逐条删红/绿。点「应用」→ 红绿配对去红留绿、孤立红/绿按你的选择保留 + **直接保存并解锁**（正文纯净）；点「取消」→ **完全还原润色前正文**（预览期手动删改全部作废）。</p>
+            <p><b>冲突检测（v7.3）</b>：生成后<b>不再自动检测</b>，改为手动——点击「检测」检测定稿内容（生成初稿 → 可选润色 → 手动检测），每章省一次 API</p>
+            <p><b>回滚</b>：撤销最近一次重写，恢复重写前的章节内容。仅在重写后可用</p>
+            <p><b>检测</b>：调用 AI 对比前文内容与角色设定，检测外貌矛盾、时间线混乱、关系错误等潜在问题</p>
+            <hr>
+            
+            <h4>六、💬 聊天指令区</h4>
+            <p>位于页面中间的面板。输入创作指令（如「第二章，雨夜男主送女主回家，气氛暧昧」）后 Ctrl+Enter 发送。</p>
+            <p>生成时显示「✍️生成中...」，完成后章节自动保存并出现在编辑器和章节列表中。</p>
+            <p>聊天区最多保留 <b>50 条</b>历史记录，超出后自动移除最早的。可点击「清空记录」清除（有二次确认）。</p>
+            <p>每次生成完成后，聊天消息会显示 <b>预估费用</b>（按 DeepSeek 官方峰谷定价：工作日 UTC 01:00-04:00、06:00-10:00 为高峰，法定节假日按非峰时；deepseek-v4-pro 当前路由到 Flash，按 Flash 价格估算）。</p>
+            <p>生成过程中可点击红色 <b>⏹ 停止</b> 按钮取消当前生成。</p>
+            <hr>
+            
+            <h4>七、📖 世界书设置（右侧面板）</h4>
+            <p><b>📖 世界书 tab</b>：</p>
+            <ul><li><b>世界观名词</b>：故事的时代背景、地理设定、社会规则 + 特殊词汇、人名地名、魔法体系等自定义术语（原世界观与专有名词合并，v7.6）</li><li><b>主线大纲</b>：故事的整体走向、核心冲突、关键转折（原情节主线）</li></ul>
+            <p><b>🌍 全局提示 tab</b>：</p>
+            <ul><li><b>全局提示词</b>：定义 AI 的系统角色，如「你是一位擅长细腻情感的言情小说家，注重心理描写和氛围营造」</li><li><b>行文规范</b>：设定文风要求，如「文风细腻、多用比喻、段落简短有力」</li></ul>
+            <p>以上所有文本框在<b>失去焦点时自动保存</b>。</p>
+            <hr>
+            
+            <h4>八、👥 本书角色库</h4>
+            <p>点击顶部「本书角色库」按钮打开管理面板。每个角色可设定：</p>
+            <ul><li><b>姓名</b>：角色名称（必填）</li><li><b>外貌体征</b>：身高、发型、体型等</li><li><b>性格</b>：内向/外向、温柔/暴躁等</li><li><b>服装及其他设定</b>：常穿服饰、特殊能力、背景故事等</li><li><b>身份关联</b>：角色身份、与主线的关系等</li></ul>
+            <p>角色设定在 AI 生文时作为系统提示注入。支持从「素材角色库」<b>批量导入/导出</b>。</p>
+            <hr>
+            
+            <h4>九、🔗 本书关系图</h4>
+            <p>点击顶部「本书关系图」打开 SVG 人物关系网络图。关系图数据会在 AI 生文时<b>全量注入 system prompt</b>（不受精准模式影响），以「角色关系图」段落形式出现在角色设定之前。</p>
+            <ul><li><b>添加关系</b>：点击角色方块 → 在弹窗中选目标角色 + 输入关系名（如"母子""暗恋""宿敌"）→ 点添加</li><li><b>删除关系</b>：点击角色 → 在已有关系中点击 ✕ 删除</li><li><b>颜色规则</b>：同一种关系名自动分配同一种颜色，一目了然</li><li><b>拖拽布局</b>：可拖拽任意节点调整位置，点「重置布局」恢复方形棋盘排列；网格吸附开关可让节点对齐网格</li></ul>
+            <hr>
+            
+            <h4>十、🎭 素材角色库</h4>
+            <p>跨小说通用的角色模板库。可新增、编辑、删除素材角色，支持 <b>JSON 导入/导出</b>。在本书角色库中可一键批量导入素材角色。</p>
+            <hr>
+            
+            <h4>十一、📝 草稿本</h4>
+            <p>顶部「草稿本」按钮打开独立文本编辑器，用于临时记录灵感、随笔、情节构思。内容存储在浏览器本地，点击「保存」生效。备份时会一并导出。</p>
+            <hr>
+            
+            <h4>十二、💪 全局动作库</h4>
+            <p>定义通用动作描写规范。每个动作包含：<b>动作要领</b>、<b>台词运用</b>、<b>描写建议</b>。AI 生成时会严格遵循这些规则来描写动作场景（如"打斗动作：注重速度和力量感，短句快速切换"）。支持 JSON 导入/导出。</p>
+            <hr>
+            
+            <h4>十三、🚫 本书禁用词</h4>
+            <p>添加不希望 AI 使用的词语或短语（如某些现代词汇、人名、俗语）。AI 在生成时会收到警告，尽力避免使用这些词汇。</p>
+            <hr>
+            
+            <h4>十四、⚙️ API 调参（四页签）</h4>
+            <p>点击聊天区右侧 ⚙ 按钮打开设置，含四个页签：</p>
+            <ul><li><b>✍️ 正文 API</b>：正文生成配置——API 地址/Key/模型（默认 DeepSeek deepseek-flash）、温度、Top-p、重复惩罚、Maxtokens、频率/存在惩罚、前文摘要、思考模式开关、推理强度（low/high/max），以及两个自动发送开关（见下）</li><li><b>🔍 审稿 API（v7.1，v7.3 完善）</b>：润色审查配置——地址/Key/模型（默认 DeepSeek 审稿，同人内容宽松）、🧠 推理强度（low/high/max，默认 max）、最大长度（默认 50000）——**所有修改都附理由说明**（v8.4.1）；默认思考模式；v8.6 起可开「⚙️ 参数模式」（思考失效+随机性增加，温度 0.5/Top-p 0.87/存在 0/频率 0.1/重复 1 可调）</li><li><b>🎨 生图 API</b>：规划中（仅 EXE 版实装），灰显占位</li></ul>
+            <p><b>💭 思考模式</b>：AI 在写正文前先内部"打草稿"——回顾前文、对照角色库/动作库/服装库/禁用词检查一致性，再落笔。推理强度三档 low/high/max，越高思考越深入、token 越大速度越慢；开启后温度等创意参数失效。</p>
+            <p><b>🧭 续写自动（v7.2）</b>：开启后选中续写走向卡片即自动续写；关闭（默认）则填入消息栏待手动 Ctrl+Enter 发送。</p>
+            <p><b>🔄 重写自动发送（v7.2）</b>：开启后点击重写回填原始指令即自动执行；关闭（默认）则回填后待手动发送。</p>
+            <p>点击「测试连接」验证 API 可用性后再保存（正文/审稿各自测试）。</p>
+            <hr>
+            
+            <h4>十五、💾 备份与导出</h4>
+            <p><b>备份</b>：导出包含所有小说、角色、动作库、API 配置的完整 JSON 文件。建议定期备份。</p>
+            <p><b>恢复</b>：导入之前导出的备份 JSON，<b>会覆盖当前全部数据</b>，请谨慎操作。</p>
+            <p><b>导出正文</b>（v9.0）：顶部按钮点击后弹出选择——<b>导出全书</b>（当前小说的全部章节为 TXT）/ <b>导出本章</b>（仅当前编辑的章节为 TXT）。</p>
+            <p><b>安卓恢复</b>（v9.0）：选择 Android App 存档后，只追加书籍正文和本书角色库。已有书籍、章节和角色不会被覆盖；API、全局素材库、草稿本、禁用词、统计和其他设置不会导入。</p>
+            <hr>
+            
+            <h4>十六、📈 角色成长库（v7.1）</h4>
+            <p>角色可以随剧情<b>成长</b>。AI 生成新章时，若正文包含角色成长情节，会返回「【成长】」标记段；系统自动分离提取为<b>成长经历条目</b>（如「第5章：千岁首次主动靠近男主」），追加到该角色的成长库。</p>
+            <ul><li><b>查看/编辑</b>：本书角色库 → 角色详情 → 「成长经历」列表，可新增、编辑、删除条目；删除角色/章节时成长条目级联清理</li><li><b>注入机制</b>：生成时注入角色设定 + 成长经历——⭐ 标记最新状态作为「当前状态」优先注入，其余成长经历按权重次之（用户消息＞最新成长状态＞角色库人设）；前后章节成长状态自动衔接</li><li><b>标题自动补章号</b>：成长条目无章号时自动补当前章节号，便于追溯</li><li><b>生成</b>：v7.8 起正文/摘要/成长分离——正文生成完成后自动调用「摘要+成长」合并请求，也可在摘要区手动「重新生成摘要和经历」</li></ul>
+            <hr>
+            
+            <h4>十七、🛡️ 数据与安全</h4>
+            <p><b>存储位置</b>：所有数据存储在浏览器 localStorage 中，<b>不会上传到本项目以外的任何自有服务器</b>。但请注意：使用生成/检测/润色/吐槽/摘要等 AI 功能时，相关正文、章节前文、人物设定与 API Key 会<b>发送到你配置的 API 服务商</b>（默认 DeepSeek，可在「API 调参」修改为自定义端点）用于处理请求——请勿在内容中包含不愿对外披露的信息。清除浏览器数据会导致本地数据丢失。导出/备份文件（含 API Key 明文）默认保存到<b>浏览器下载目录</b>（网页受浏览器安全限制无法自选保存路径）——如需数据跟随文件夹，请在浏览器设置中将下载位置改为你的数据文件夹后再导出。</p>
+            <p><b>容量上限</b>：约 5MB，顶部实时显示使用量。超过 80% 时会变橙色警告，建议及时导出备份。</p>
+            <p><b>自动保存</b>：每 30 秒自动保存一次；切换章节、切换小说、关闭页面时也会自动保存。</p>
+            <p><b>API Key 安全</b>：Key 仅存储在本地浏览器（不设自有服务器）；调用 AI 功能时随请求发送到你配置的 API 地址（默认 DeepSeek；若改为自定义端点，Key 将发送到该端点）。请勿在不受信任的自定义端点使用真实 Key。</p>
+            <hr>
+            <h4>十八、📜 日志与统计</h4>
+            <p>侧栏「📜 日志」页签记录全部提示历史（HH:MM:SS 时间戳），最多 50 条，固定高度可滚动。下方为<b>实时统计小面板</b>：当前日期时间、计费时段（高峰/空闲）、本次消费金额、本次使用时长、本次输入字数、本次生成字数（1 秒自动刷新）。完整备份/恢复包含日志。</p>
+            <hr>
+            <p style="text-align:center;color:#3B8ED4;">祝创作愉快，文思泉涌！</p>
+        </div>
+        <div class="modal-buttons"><button id="closeFullGuideBtn" class="glass-btn">关闭</button></div>
+    </div>
+</div>
+
+<div id="conflictPanel" class="conflict-panel"><h4>📋 章节冲突检测 <span id="closeConflictPanel" class="close-conflict"><i class="fas fa-times"></i></span></h4><div id="conflictList"></div><button id="recheckConflictBtn" class="glass-btn" style="margin-top:10px;">重新检测</button></div>
+<!-- v7.8 吐槽面板：模拟读者/编辑/作家/粉丝/喷子等角色点评本章（独立审稿 API 请求，结果按章记忆） -->
+<div id="banterPanel" class="conflict-panel" style="border-color:#4A3A8A;width:380px;"><h4>💬 本章吐槽 <span id="closeBanterPanel" class="close-conflict"><i class="fas fa-times"></i></span></h4><div id="banterList" style="font-size:15px;line-height:1.7;color:#EDEAF2;"></div><button id="genBanterBtn" class="glass-btn" style="margin-top:10px;">🔄 生成吐槽</button></div>
+
+<!-- 添加/删除关系模态框 -->
+<div id="relationEditModal" class="modal" style="display:none;"><div class="modal-card" style="width:600px;max-width:95%;max-height:80vh;overflow-y:auto;">
+<h3><i class="fas fa-link"></i> 编辑关系 · <span id="relEditCharName"></span></h3>
+<div style="margin:8px 0;font-size:0.7rem;color:#3B8ED4;" id="relExistingList"></div>
+<hr>
+<div style="display:flex;gap:8px;align-items:center;margin:8px 0;">
+<select id="relTargetSelect" style="flex:1;background:#0E0D14;border:1px solid #3A3452;border-radius:14px;padding:6px 10px;color:#EDEAF2;font-size:0.75rem;"><option value="">选择目标角色...</option></select>
+<input type="text" id="relTypeInput" placeholder="关系名称（如 母子）" style="flex:1;background:#0E0D14;border:1px solid #3A3452;border-radius:14px;padding:6px 10px;color:#EDEAF2;font-size:0.75rem;">
+<button id="relAddBtn" class="glass-btn"><i class="fas fa-plus"></i> 添加</button>
+</div>
+<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+<button id="relCloseBtn" class="glass-btn">关闭</button>
+</div></div></div>
+
+<input type="file" id="backupFileInput" accept=".json" style="display:none" />
+
+<!-- 精准模式模态框 -->
+<div id="precisionModal" class="modal"><div class="modal-card precision-modal-card">
+<h3><i class="fas fa-crosshairs"></i> 精准模式 · 本章设定选择</h3>
+<div class="precision-stats">已选角色 <b id="precCharCount">0</b> 个 · 已选动作 <b id="precActionCount">0</b> 个 · 已选服装 <b id="precCostumeCount">0</b> 个</div>
+<div class="precision-split">
+    <div class="precision-col"><h4>👥 本书角色 <span id="precCharTotal"></span></h4><div class="precision-search"><i class="fas fa-search"></i><input type="text" id="precCharSearch" placeholder="搜索角色…"><i class="fas fa-times precision-clear" id="precCharSearchClear"></i></div><div class="precision-list" id="precisionCharList"></div></div>
+    <div class="precision-col"><h4>💪 全局动作 <span id="precActionTotal"></span></h4><div class="precision-search"><i class="fas fa-search"></i><input type="text" id="precActionSearch" placeholder="搜索动作…"><i class="fas fa-times precision-clear" id="precActionSearchClear"></i></div><div class="precision-list" id="precisionActionList"></div></div>
+    <div class="precision-col"><h4>👗 全局服装 <span id="precCostumeTotal"></span></h4><div class="precision-search"><i class="fas fa-search"></i><input type="text" id="precCostumeSearch" placeholder="搜索服装…"><i class="fas fa-times precision-clear" id="precCostumeSearchClear"></i></div><div class="precision-list" id="precisionCostumeList"></div></div>
+</div>
+<div style="display:flex;gap:10px;justify-content:space-between;margin-top:16px;">
+    <div><button id="precSelectAllChars" class="glass-btn" style="font-size:0.6rem;">全选角色</button><button id="precSelectAllActions" class="glass-btn" style="font-size:0.6rem;margin-left:4px;">全选动作</button><button id="precSelectAllCostumes" class="glass-btn" style="font-size:0.6rem;margin-left:4px;">全选服装</button><button id="precDeselectAll" class="glass-btn" style="font-size:0.6rem;margin-left:4px;">全部取消</button><button id="precRandomCombo" class="glass-btn" style="font-size:0.6rem;margin-left:4px;" title="随机抽取 2 角色 + 3 动作 + 2 服装，复制到剪贴板">🎲 随机组合</button><button id="precOrganicCombo" class="glass-btn" style="font-size:0.6rem;margin-left:4px;" title="有机组合：按标签关联抽取 2 角色 + 3 动作 + 2 服装（角色需≥2人同标签，服装需与角色标签吻合）">🧬 有机组合</button><button id="precThisCombo" class="glass-btn" style="font-size:0.6rem;margin-left:4px;" title="复制本次勾选的动作+服装名称（不含角色）">📋 本次组合</button></div>
+    <div><button id="precDisableBtn" class="glass-btn" style="background:#4A2A2A;">关闭精准模式</button><button id="savePrecisionBtn" class="glass-btn" style="background:#2A5A3A;margin-left:6px;">保存并开启</button><button id="closePrecisionBtn" class="glass-btn" style="margin-left:4px;">取消</button></div>
+</div></div></div>
+
+<!-- 草稿本模态框 -->
+<div id="genModeModal" class="modal"><div class="modal-card" style="width:420px;"><h3><i class="fas fa-layer-group"></i> 生成模式</h3><div style="display:flex;gap:12px;margin-top:16px;"><button id="genModeDualBtn" class="glass-btn gen-mode-btn" style="flex:1;padding:16px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:0.8rem;"><i class="fas fa-columns" style="font-size:1.1rem;"></i>并发双版<span style="font-size:0.6rem;color:#8A84A8;">仅主动生文</span></button><button id="genModeMultiBtn" class="glass-btn gen-mode-btn" style="flex:1;padding:16px 10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:0.8rem;"><i class="fas fa-book" style="font-size:1.1rem;"></i>连发多章<span style="font-size:0.6rem;color:#8A84A8;">仅主动生文</span></button></div><div style="display:flex;justify-content:flex-end;margin-top:16px;gap:10px;"><button id="genModeSaveBtn" class="glass-btn" style="background:linear-gradient(135deg,#2A6EA4,#3B8ED4);color:#fff;">保存</button><button id="genModeCloseBtn" class="glass-btn">关闭</button></div></div></div><div id="exportChoiceModal" class="modal"><div class="modal-card" style="width:380px;"><h3><i class="fas fa-download"></i> 导出</h3><div style="display:flex;gap:12px;margin-top:16px;"><button id="exportFullChoiceBtn" class="glass-btn" style="flex:1;padding:14px 10px;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-book"></i> 导出全书</button><button id="exportChapterChoiceBtn" class="glass-btn" style="flex:1;padding:14px 10px;display:flex;align-items:center;justify-content:center;gap:6px;"><i class="fas fa-file-alt"></i> 导出本章</button></div><div style="display:flex;justify-content:flex-end;margin-top:16px;"><button id="closeExportChoiceBtn" class="glass-btn">取消</button></div></div></div>
+<div id="scratchpadModal" class="modal"><div class="modal-card" style="width:700px;">
+<h3><i class="fas fa-sticky-note"></i> 草稿本</h3>
+<div id="scratchpadTabs" class="scratchpad-tabs"></div>
+<textarea id="scratchpadContent" style="width:100%;height:400px;background:#13121C;border:1px solid #3A3452;border-radius:16px;padding:14px;color:#EDEAF2;font-size:0.8rem;line-height:1.6;resize:vertical;font-family:'Georgia','Noto Serif SC',serif;" placeholder="在这里记录灵感、随笔、情节构思……"></textarea>
+<div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+<button id="saveScratchpadBtn" class="glass-btn" style="background:#2A5A3A;"><i class="fas fa-save"></i> 保存</button>
+<button id="closeScratchpadBtn" class="glass-btn">关闭</button>
+</div></div></div>
+
+<input type="file" id="importGlobalCharsFileInput" accept=".json" style="display:none" />
+<input type="file" id="importGlobalActionsFileInput" accept=".json" style="display:none" />
+<input type="file" id="importGlobalCostumesFileInput" accept=".json" style="display:none" />
+<input type="file" id="androidRestoreFileInput" accept=".json,application/json" style="display:none" />
+
+<!-- Electron 版应用内输入/确认/单实例提示；浏览器版也复用同一套深色样式。 -->
+<div id="promptModal" class="modal dialog-modal" role="dialog" aria-modal="true" aria-labelledby="promptTitle">
+    <div class="modal-card dialog-card" style="width:420px;max-width:90%;">
+        <h3 id="promptTitle">输入</h3>
+        <input type="text" id="promptInput" placeholder="请输入" autocomplete="off">
+        <div class="dialog-actions"><button id="promptCancel" class="glass-btn">取消</button><button id="promptOk" class="dialog-primary">确定</button></div>
+    </div>
+</div>
+<div id="confirmModal" class="modal dialog-modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="modal-card dialog-card" style="width:440px;max-width:90%;">
+        <h3 id="confirmTitle">确认操作</h3>
+        <div id="confirmMsg" class="dialog-message"></div>
+        <div class="dialog-actions"><button id="confirmCancel" class="glass-btn">取消</button><button id="confirmOk" class="dialog-danger">确定</button></div>
+    </div>
+</div>
+<div id="secondInstanceModal" class="modal dialog-modal" role="dialog" aria-modal="true" aria-labelledby="secondInstanceTitle">
+    <div class="modal-card dialog-card" style="width:400px;max-width:90%;">
+        <h3 id="secondInstanceTitle"><i class="fas fa-info-circle"></i> AI小说生成器</h3>
+        <div class="dialog-message">程序已在运行，已切换到现有窗口。</div>
+        <div class="dialog-actions"><button id="secondInstanceOk" class="glass-btn">知道了</button></div>
+    </div>
+</div>
+
+<script>
+
+/* @SCRIPT */
+
+</script>
+<!-- v8.1：隐藏模式遮罩（双击标题触发，覆盖主界面仅留顶栏；字符画随机，v8.1.2） -->
+<div id="privacyOverlay"><pre id="privacyArt" class="privacy-art"></pre></div>
+</body>
+</html>
