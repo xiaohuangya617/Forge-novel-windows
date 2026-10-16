@@ -92,4 +92,4 @@ renderer 构建和源码校验不需要旧运行时；完整 EXE runtime 构建�
 
 作者原创代码和文档采用 MIT，许可证见 [LICENSE](LICENSE)。Electron、Chromium、Font Awesome 等第三方组件继续遵循各自随包许可证，不能被本项目许可证覆盖。组件说明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
-当前发布准备目录不携带 API Key、用户小说或 EXE 用户数据。正式推送前请按 [GitHub 发布方案](docs/GITHUB发布方案.md) 完成敏感信息扫描、许可证确认、Release ZIP 隔离启动验收和远程内容核验。
+当前发布目录不携带 API Key、用户小说或 EXE 用户数据。发布流程、构建前提和验收记录见 [GitHub 发布方案](docs/GITHUB发布方案.md)；Release ZIP 已完成隔离启动验收和远程内容核验。
